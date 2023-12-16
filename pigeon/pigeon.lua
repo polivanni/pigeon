@@ -127,7 +127,7 @@ end
 
 local function define(message_id, message_def)
 	-- Defensive programming can be removed on production, when sure
-	local hashed_message_id = message_id_to_hash(message_id)
+	local hashed_message_id = message_id
 	if not hashed_message_id then
 		log.e("Pigeon: Failed to define message, id: " .. (message_id or "") .. ". Message_id is incorrect.", default_tag)
 		return false
