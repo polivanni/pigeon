@@ -71,10 +71,10 @@ local function generate_id()
 end
 
 local function log_is_print()
-	log.t = print  -- trace
-	log.i = print  -- info
-	log.w = print  -- warning
-	log.e = print  -- error
+	log.t = print -- trace
+	log.i = print -- info
+	log.w = print -- warning
+	log.e = print -- error
 end
 -- Call this function to set initally print as logging function by default
 log_is_print()
@@ -92,7 +92,7 @@ local function message_id_to_hash(message_id)
 		return false
 	end
 	if type(message_id) == "string" then
-		message_id = hashed[message_id] or hash(message_id)-- Ensure message_id is pre-hashed
+		message_id = hashed[message_id] or hash(message_id) -- Ensure message_id is pre-hashed
 	end
 	if type(message_id) ~= "userdata" then
 		log.e("Pigeon: 'message_id' is neither string nor hash.", default_tag)
@@ -112,11 +112,14 @@ local function data_has_type(data, value_type, second_value_type)
 		return false
 	end
 	if not second_value_type and type(data) ~= value_type then
-		log.e("Pigeon: data has incorrect type: "..(type(data) or "")..". Expected: "..(value_type or ""), default_tag)
+		log.e("Pigeon: data has incorrect type: " .. (type(data) or "") .. ". Expected: " .. (value_type or ""),
+			default_tag)
 		return false
 	end
 	if second_value_type and not ((type(data) == value_type) or (type(data) == second_value_type)) then
-		log.e("Pigeon: data has incorrect type: "..(type(data) or "")..". Expected: "..(value_type or "").." or: "..(second_value_type), default_tag)
+		log.e(
+			"Pigeon: data has incorrect type: " ..
+			(type(data) or "") .. ". Expected: " .. (value_type or "") .. " or: " .. (second_value_type), default_tag)
 		return false
 	end
 	return true
@@ -126,11 +129,11 @@ local function define(message_id, message_def)
 	-- Defensive programming can be removed on production, when sure
 	local hashed_message_id = message_id
 	if not hashed_message_id then
-		log.e("Pigeon: Failed to define message, id: "..(message_id or "")..". Message_id is incorrect.", default_tag)
+		log.e("Pigeon: Failed to define message, id: " .. (message_id or "") .. ". Message_id is incorrect.", default_tag)
 		return false
 	end
 	if M.letters[hashed_message_id] and not data_has_type(message_def, "table") then
-		log.e("Pigeon: Failed to redefine message, id: "..(message_id or "")..". New data is incorrect.", default_tag)
+		log.e("Pigeon: Failed to redefine message, id: " .. (message_id or "") .. ". New data is incorrect.", default_tag)
 		return false
 	end
 
@@ -138,7 +141,7 @@ local function define(message_id, message_def)
 		id = hashed_message_id,
 		data = message_def
 	}
-	log.t("Pigeon: Successfully defined message, id: "..(message_id or ""), default_tag)
+	log.t("Pigeon: Successfully defined message, id: " .. (message_id or ""), default_tag)
 	return true
 end
 
@@ -151,7 +154,7 @@ local function unsubscribe(id)
 
 	local subscriber = subscribers[id]
 	if not subscriber then
-		log.w("Pigeon: Skipped unsubscribing already unsubscribed or not existing subscriber, id: "..id, default_tag)
+		log.w("Pigeon: Skipped unsubscribing already unsubscribed or not existing subscriber, id: " .. id, default_tag)
 		return true
 	end
 
@@ -165,7 +168,7 @@ local function unsubscribe(id)
 	end
 
 	subscribers[id] = nil
-	log.t("Pigeon: Successfully unsubscribed subscriber, id: "..id, default_tag)
+	log.t("Pigeon: Successfully unsubscribed subscriber, id: " .. id, default_tag)
 	return true
 end
 
@@ -187,15 +190,16 @@ local function subscribe(messages, hook, url)
 	url = url or msg.url()
 
 	if subscribers[id] then
-		log.w("Pigeon: Overwriting subscriber registered, id: "..id, default_tag)
+		log.w("Pigeon: Overwriting subscriber registered, id: " .. id, default_tag)
 		unsubscribe(id)
 	end
 
 	-- Ensure messages are hashed
-	for i,message_id in ipairs(messages) do
+	for i, message_id in ipairs(messages) do
 		local hashed_message_id = message_id_to_hash(message_id)
 		if not hashed_message_id then
-			log.e("Pigeon: Failed to subscribe, one of messages, id: "..(message_id or "").." is incorrect.", default_tag)
+			log.e("Pigeon: Failed to subscribe, one of messages, id: " .. (message_id or "") .. " is incorrect.",
+				default_tag)
 			return false
 		end
 		messages[i] = hashed_message_id
@@ -225,24 +229,34 @@ local function subscribe(messages, hook, url)
 		end
 	end
 
-	log.t("Pigeon: Successfully subscribed subscriber, id: "..id, default_tag)
+	log.t("Pigeon: Successfully subscribed subscriber, id: " .. id, default_tag)
 	return id
 end
 
 local function is_data_correct(message_id, message)
 	local message_definition = M.letters[message_id]
-	if not (message_definition and message_definition.data and (type(message_definition.data) == "table") ) then
-		log.t("Pigeon: Sending anyway, because no data to check for message, id: "..message_id, default_tag)
+	if not (message_definition and message_definition.data and (type(message_definition.data) == "table")) then
+		log.t("Pigeon: Sending anyway, because no data to check for message, id: " .. message_id, default_tag)
 		return true
 	end
 
 	for key, value_type in pairs(message_definition.data) do
 		if message[key] == nil then
-			log.e("Pigeon: Failed to send message, id: "..tostring(message_id)..". It expects not nil key: "..key, default_tag)
+			log.e("Pigeon: Failed to send message, id: " .. tostring(message_id) .. ". It expects not nil key: " .. key,
+				default_tag)
 			return false
 		end
 		if type(message[key]) ~= value_type then
-			log.e("Pigeon: Failed to send message, id: "..tostring(message_id)..". It expects key: ["..key.."] to be of type: "..value_type, default_tag)
+			local err_msg = string.format(
+				"Pigeon: Failed to send message, id: %s. It expects key: [%s] to be of type: %s. Given type is %s",
+				tostring(message_id),
+				key,
+				value_type,
+				type(message[key])
+			)
+
+
+			log.e(err_msg, default_tag)
 			return false
 		end
 	end
@@ -252,13 +266,14 @@ end
 local function send_to(url, message_id, message)
 	-- Defensive programming can be removed on production, when sure
 	if not data_has_type(url, "userdata", "string") then
-		log.e("Pigeon: Failed to send message to url: "..(url or "")..", id:"..(message_id or "")..". Url is incorrect.", default_tag)
+		log.e("Pigeon: Failed to send message to url: " ..
+			(url or "") .. ", id:" .. (message_id or "") .. ". Url is incorrect.", default_tag)
 		return false
 	end
 
 	local hashed_message_id = message_id_to_hash(message_id)
 	if not hashed_message_id then
-		log.e("Pigeon: Failed to send message, id: "..(message_id or "").." is incorrect.", default_tag)
+		log.e("Pigeon: Failed to send message, id: " .. (message_id or "") .. " is incorrect.", default_tag)
 		return false
 	end
 
@@ -276,7 +291,7 @@ local function send(message_id, message)
 	-- Defensive programming can be removed on production, when sure
 	local hashed_message_id = message_id_to_hash(message_id)
 	if not hashed_message_id then
-		log.e("Pigeon: Failed to send message, id: "..(message_id or "").." is incorrect.", default_tag)
+		log.e("Pigeon: Failed to send message, id: " .. (message_id or "") .. " is incorrect.", default_tag)
 		return false
 	end
 	local event = events[hashed_message_id]
@@ -349,7 +364,7 @@ end
 -- Unsubscribe all saved subscriptions.
 -- @return	result		[boolean]	- true if unsubscribed succesfully, false otherwise.
 function M.unsubscribe_all()
-	for i,subscriber in ipairs(subscribers) do
+	for i, subscriber in ipairs(subscribers) do
 		if not unsubscribe(subscriber.id) then
 			return false
 		end
@@ -366,7 +381,8 @@ function M.send(message_id, message)
 	-- Defensive programming can be removed on production, when sure
 	local hashed_message_id = message_id_to_hash(message_id)
 	if not hashed_message_id then
-		log.e("Pigeon: Failed to send message, id: "..(message_id or "")..". Message_id is not given or has wrong type.", default_tag)
+		log.e("Pigeon: Failed to send message, id: " ..
+			(message_id or "") .. ". Message_id is not given or has wrong type.", default_tag)
 		return false
 	end
 
@@ -374,7 +390,7 @@ function M.send(message_id, message)
 		message_queue[#message_queue + 1] = { message_id = message_id, message = message }
 	else
 		if send(message_id, message) then
-			log.i("Pigeon: Message sent succesfully, id: "..message_id, default_tag)
+			log.i("Pigeon: Message sent succesfully, id: " .. message_id, default_tag)
 			return true
 		end
 	end
