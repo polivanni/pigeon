@@ -157,6 +157,9 @@ local function unsubscribe(id)
 end
 
 local function subscribe(messages, hook, url)
+	if type(messages) ~= "table" then
+		messages = { messages }
+	end
 	-- Defensive programming can be removed on production, when sure
 	if not data_has_type(messages, "table") then
 		log.e("Pigeon: Failed to subscribe. 'messages' is not given or is not a table.", default_tag)
